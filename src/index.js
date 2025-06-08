@@ -4,33 +4,31 @@ const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const routes = require("./routes");
 const cors = require("cors");
-const http = require("http"); // Create HTTP server for Socket.io
-const socketIo = require("socket.io"); // Import socket.io
+// const http = require("http"); // Create HTTP server for Socket.io
+// const socketIo = require("socket.io"); // Import socket.io
 const cookieParser = require("cookie-parser");
-const { MessageModel } = require("./models/ChatModel");
-const ChatService = require("./services/ChatService");
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3001;
 
 // Create HTTP server for Express and Socket.io
-const server = http.createServer(app);
+// const server = http.createServer(app);
 
 // Initialize Socket.io with CORS configuration
-const io = socketIo(server, {
-  cors: {
-    origin: "http://localhost:3000", // Allow frontend from localhost:3000 to connect
-    methods: ["GET", "POST"], // Allow GET and POST methods
-    credentials: true, // Allow cookies
-  },
-});
+// const io = socketIo(server, {
+//   cors: {
+//     origin: "http://localhost:3000", // Allow frontend from localhost:3000 to connect
+//     methods: ["GET", "POST"], // Allow GET and POST methods
+//     credentials: true, // Allow cookies
+//   },
+// });
 
 app.use(
   cors({
-    origin: "http://localhost:3000", // Allow frontend from localhost:3000 to access backend
+    origin: "https://pet-ecommerce-delta.vercel.app", // Allow frontend from Vercel
     methods: ["GET", "POST"],
-    credentials: true, // Allow cookies to be sent in CORS requests
+    credentials: true, // Allow cookies
   })
 );
 
@@ -99,6 +97,6 @@ mongoose
 //   });
 // });
 // Start the server
-server.listen(port, () => {
+app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
