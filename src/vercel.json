@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "pet-ecommerce-backend/server.js",
+      "src": "pet-ecommerce-backend/server.json",
       "use": "@vercel/node"
     }
   ],
