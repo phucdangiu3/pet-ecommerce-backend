@@ -18,7 +18,7 @@ const port = process.env.PORT || 3001;
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://pet-ecommerce-delta.vercel.app/", // hoặc vercel URL
+    origin: "https://pet-ecommerce-delta.vercel.app", // hoặc vercel URL
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
@@ -83,7 +83,7 @@ io.on("connection", (socket) => {
 
 app.use(
   cors({
-    origin: "https://pet-ecommerce-delta.vercel.app/", // Allow frontend from Vercel
+    origin: "https://pet-ecommerce-delta.vercel.app", // Allow frontend from Vercel
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true, // Allow cookies
   })
