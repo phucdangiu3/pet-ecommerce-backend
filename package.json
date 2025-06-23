@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/index.js"
+    "start": "nodemon src/index.js"
   },
   "author": "",
   "license": "ISC",
@@ -19,6 +19,8 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.14.1",
+    "nodemailer": "^7.0.3",
+    "nodemailer-plugin-inline-base64": "^2.1.1",
     "openai": "^5.0.2",
     "qs": "^6.14.0",
     "socket.io": "^4.8.1",

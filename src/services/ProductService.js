@@ -134,7 +134,7 @@ const deleteManyProduct = (ids) => {
     }
   });
 };
-const getAllProduct = (limit, page, sort, filter) => {
+const getAllProduct = (limit, page, sort, filter, search) => {
   return new Promise(async (resolve, reject) => {
     try {
       const totalProduct = await Product.countDocuments();
@@ -150,6 +150,16 @@ const getAllProduct = (limit, page, sort, filter) => {
         }
       }
 
+      // Xử lý tìm kiếm
+      let searchCondition = {};
+      if (search) {
+        // Tạo điều kiện tìm kiếm cho trường 'name' của sản phẩm
+        searchCondition.name = { $regex: search, $options: "i" }; // tìm kiếm không phân biệt hoa thường
+      }
+
+      // Kết hợp điều kiện tìm kiếm và filter (nếu có)
+      let condition = { ...filterParsed, ...searchCondition };
+
       // Nếu có filter hợp lệ (mảng 2 phần tử: [field, value])
       if (
         filterParsed &&
@@ -157,66 +167,31 @@ const getAllProduct = (limit, page, sort, filter) => {
         filterParsed.length === 2
       ) {
         const [field, value] = filterParsed;
-        let condition = {};
 
-        // Với các trường dạng string, dùng $regex để tìm gần đúng (không phân biệt hoa thường)
-        // Với 2 trường color, tag là chuỗi đơn => tìm bằng giá trị chính xác
+        // Điều kiện lọc cho trường string sử dụng regex để tìm gần đúng (không phân biệt hoa thường)
         if (field === "color" || field === "tag") {
           condition[field] = value;
         } else {
           condition[field] = { $regex: value, $options: "i" };
         }
-
-        const filteredProducts = await Product.find(condition)
-          .limit(limit)
-          .skip(page * limit);
-
-        return resolve({
-          status: "OK",
-          message: "Success",
-          data: filteredProducts,
-          total: filteredProducts.length,
-          pageCurrent: Number(page) + 1,
-          totalPage: Math.ceil(filteredProducts.length / limit),
-        });
       }
 
       // Xử lý sort nếu có
+      let objectSort = {};
       if (sort) {
-        // sort là mảng [1|-1, field] hoặc string
-        let objectSort = {};
         if (Array.isArray(sort) && sort.length === 2) {
-          objectSort[sort[1]] = Number(sort[0]);
+          objectSort[sort[1]] = Number(sort[0]); // Ví dụ: ['1', 'price']
         } else if (typeof sort === "string") {
-          // Ví dụ sort = "price:1" hoặc "rating:-1"
           const [field, direction] = sort.split(":");
-          objectSort[field] = Number(direction);
+          objectSort[field] = Number(direction); // Ví dụ: 'price:1'
         }
-
-        const sortedProducts = await Product.find()
-          .limit(limit)
-          .skip(page * limit)
-          .sort(objectSort);
-
-        return resolve({
-          status: "OK",
-          message: "Success",
-          data: sortedProducts,
-          total: totalProduct,
-          pageCurrent: Number(page) + 1,
-          totalPage: Math.ceil(totalProduct / limit),
-        });
       }
 
-      // Trả về tất cả sản phẩm nếu không filter hoặc sort
-      let products = [];
-      if (!limit) {
-        products = await Product.find();
-      } else {
-        products = await Product.find()
-          .limit(limit)
-          .skip(page * limit);
-      }
+      // Truy vấn sản phẩm với các điều kiện đã kết hợp
+      const products = await Product.find(condition)
+        .limit(limit)
+        .skip(page * limit)
+        .sort(objectSort); // Áp dụng sắp xếp nếu có
 
       resolve({
         status: "OK",

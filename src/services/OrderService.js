@@ -1,10 +1,11 @@
 const Order = require("../models/OrderModel");
 const Product = require("../models/ProductModel");
-// const EmailService = require("../services/EmailService");
+const EmailService = require("../services/EmailService");
 
 const createOrder = async (orderData) => {
   try {
     const newOrder = new Order({
+      user: orderData.user,
       orderItems: orderData.orderItems,
       shippingAddress: orderData.shippingAddress,
       paymentMethod: orderData.paymentMethod,
@@ -17,6 +18,14 @@ const createOrder = async (orderData) => {
     });
 
     await newOrder.save();
+    await EmailService.sendEmailCreateOrder(
+      orderData.email,
+      orderData.orderItems,
+      newOrder._id.toString(),
+      orderData.totalPrice,
+      orderData.note || ""
+    );
+
     for (const item of orderData.orderItems) {
       const updatedProduct = await Product.findOneAndUpdate(
         {
@@ -48,28 +57,6 @@ const createOrder = async (orderData) => {
   }
 };
 
-const getAllOrderDetails = (id) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const order = await Order.find({ user: id });
-
-      if (order === null) {
-        resolve({
-          status: "OK",
-          message: "The order is not defined",
-        });
-      }
-
-      resolve({
-        status: "OK",
-        message: "Success",
-        data: order,
-      });
-    } catch (e) {
-      reject(e);
-    }
-  });
-};
 const getDetailsOrder = (id) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -138,10 +125,42 @@ const CancelOrderDetails = (id, data) => {
     }
   });
 };
+const updateOrder = (id, data) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      const order = await Order.findById(id);
+      if (!order) {
+        return resolve({
+          status: "ERR",
+          message: "Không tìm thấy đơn hàng để cập nhật",
+        });
+      }
+
+      // Cập nhật các trường cho phép
+      const updatableFields = ["isDelivered", "isPaid"];
+      updatableFields.forEach((field) => {
+        if (data[field] !== undefined) {
+          order[field] = data[field];
+        }
+      });
+
+      const updatedOrder = await order.save();
+
+      resolve({
+        status: "OK",
+        message: "Cập nhật đơn hàng thành công",
+        data: updatedOrder,
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
 
 const getAllOrder = () => {
   return new Promise(async (resolve, reject) => {
     try {
+      // Lấy tất cả đơn hàng
       const allOrder = await Order.find().sort({
         createdAt: -1,
         updatedAt: -1,
@@ -156,10 +175,37 @@ const getAllOrder = () => {
     }
   });
 };
+const getAllOrderDetails = (userId) => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      // Lấy tất cả đơn hàng của một người dùng cụ thể
+      const order = await Order.find({ user: userId }).sort({
+        createdAt: -1,
+        updatedAt: -1,
+      });
+
+      if (order.length === 0) {
+        return resolve({
+          status: "OK",
+          message: "No orders found for this user",
+        });
+      }
+
+      resolve({
+        status: "OK",
+        message: "Success",
+        data: order,
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
 module.exports = {
   createOrder,
   getAllOrderDetails,
   getDetailsOrder,
+  updateOrder,
   CancelOrderDetails,
   getAllOrder,
 };

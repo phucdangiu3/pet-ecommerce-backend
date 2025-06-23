@@ -109,13 +109,13 @@ const deleteMany = async (req, res) => {
 };
 const getAllProduct = async (req, res) => {
   try {
-    const { limit, page, sort, filter } = req.query;
-    console.log("sort", sort);
+    const { limit, page, sort, filter, search } = req.query;
     const response = await ProductService.getAllProduct(
       Number(limit) || null,
       Number(page) || 0,
       sort,
-      filter
+      filter,
+      search
     );
     return res.status(200).json(response);
   } catch (e) {

@@ -1,0 +1,15 @@
+// src/routes/DiscountRouter.js
+const express = require("express");
+const router = express.Router();
+const DiscountController = require("../controllers/DiscountController");
+
+// Tạo mã giảm giá
+router.post("/create", DiscountController.createDiscount);
+
+// Kiểm tra mã giảm giá
+router.post("/check", DiscountController.checkDiscount);
+router.get("/get-all", DiscountController.getAllDiscount);
+router.put("/update/:id", DiscountController.updateDiscount); // ✅ update
+router.delete("/delete/:id", DiscountController.deleteDiscount); // ✅ delete
+
+module.exports = router;

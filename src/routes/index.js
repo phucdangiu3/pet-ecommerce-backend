@@ -5,6 +5,7 @@ const PaymentRouter = require("./PaymentRouter");
 const PostRouter = require("./PostRouter");
 const CommentRouter = require("./CommentRouter");
 const chatRouter = require("./ChatRouter");
+const DiscountRouter = require("./DiscountRouter");
 
 const routes = (app) => {
   app.use("/api/user", UserRouter);
@@ -14,5 +15,6 @@ const routes = (app) => {
   app.use("/api/post", PostRouter);
   app.use("/api/comments", CommentRouter);
   app.use("/api/chat", chatRouter);
+  app.use("/api/discount", DiscountRouter);
 };
 module.exports = routes;

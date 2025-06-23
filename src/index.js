@@ -4,30 +4,87 @@ const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const routes = require("./routes");
 const cors = require("cors");
-// const http = require("http"); // Create HTTP server for Socket.io
-// const socketIo = require("socket.io"); // Import socket.io
+const http = require("http"); // Create HTTP server for Socket.io
+const { Server } = require("socket.io"); // ✅ fix đúng
 const cookieParser = require("cookie-parser");
+const { saveMessage } = require("./services/ChatService");
+const { getMessagesBetween } = require("./services/ChatService");
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3001;
 
-// Create HTTP server for Express and Socket.io
-// const server = http.createServer(app);
+// Tạo server HTTP và Socket.IO
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000", // hoặc vercel URL
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  },
+});
 
-// Initialize Socket.io with CORS configuration
-// const io = socketIo(server, {
-//   cors: {
-//     origin: "http://localhost:3000", // Allow frontend from localhost:3000 to connect
-//     methods: ["GET", "POST"], // Allow GET and POST methods
-//     credentials: true, // Allow cookies
-//   },
-// });
+// Biến toàn cục để quản lý người dùng và tin nhắn
+const users = {};
+const messages = {};
+
+// 🎯 BẮT SỰ KIỆN SOCKET.IO
+io.on("connection", (socket) => {
+  console.log("📥 Client connected:", socket.id);
+
+  socket.on("join", ({ userId, role }) => {
+    users[userId] = socket.id;
+    socket.join(userId);
+    socket.role = role;
+    if (!messages[userId]) messages[userId] = [];
+    console.log(`🧑 ${userId} (${role}) joined`);
+  });
+  socket.on("sendMessage", async ({ from, to, text }) => {
+    messages[to] = messages[to] || [];
+    messages[to].push({ from, to, text });
+
+    // Gửi đến người nhận nếu đang online
+    if (users[to]) {
+      io.to(to).emit("receiveMessage", { from, text });
+    }
+
+    // 🧠 Lưu vào MongoDB
+    try {
+      await saveMessage({ from, to, text });
+    } catch (err) {
+      console.error("❌ Lỗi khi lưu tin nhắn:", err);
+    }
+  });
+
+  socket.on("getUserList", () => {
+    const userList = Object.keys(users).filter((id) => id !== "admin");
+    io.to(socket.id).emit("userList", userList);
+  });
+
+  socket.on("getMessages", async ({ userId }) => {
+    try {
+      const history = await getMessagesBetween(userId, "admin");
+      socket.emit("chatHistory", history);
+    } catch (err) {
+      console.error("❌ Lỗi khi lấy chat history:", err);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    for (let userId in users) {
+      if (users[userId] === socket.id) {
+        delete users[userId];
+        console.log(`❌ User ${userId} disconnected`);
+        break;
+      }
+    }
+  });
+});
 
 app.use(
   cors({
-    origin: "https://pet-ecommerce-delta.vercel.app", // Allow frontend from Vercel
-    methods: ["GET", "POST"],
+    origin: "http://localhost:3000", // Allow frontend from Vercel
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true, // Allow cookies
   })
 );
@@ -55,48 +112,6 @@ mongoose
     console.log("Database connection failed: ", err);
   });
 
-// const userSocketMap = {}; // To map userIds to socketIds
-// const adminSocketMap = {}; // To map adminIds to socketIds
-
-// io.on("connection", (socket) => {
-//   console.log(`User connected: ${socket.id}`);
-
-//   socket.on("new_message", async (data) => {
-//     const newMessage = await ChatService.createMessage(data);
-
-//     // Emit message to sender and receiver
-//     if (userSocketMap[data.sender]) {
-//       io.to(userSocketMap[data.sender]).emit("message_received", newMessage);
-//     }
-//     if (userSocketMap[data.receiver]) {
-//       io.to(userSocketMap[data.receiver]).emit("message_received", newMessage);
-//     }
-
-//     // Send message to all admins
-//     for (let adminId in adminSocketMap) {
-//       io.to(adminSocketMap[adminId]).emit("new_admin_message", newMessage);
-//     }
-//   });
-
-//   // Handle disconnection
-//   socket.on("disconnect", () => {
-//     for (let userId in userSocketMap) {
-//       if (userSocketMap[userId] === socket.id) {
-//         delete userSocketMap[userId];
-//         console.log(`User ${userId} disconnected`);
-//         break;
-//       }
-//     }
-//     for (let adminId in adminSocketMap) {
-//       if (adminSocketMap[adminId] === socket.id) {
-//         delete adminSocketMap[adminId];
-//         console.log(`Admin ${adminId} disconnected`);
-//         break;
-//       }
-//     }
-//   });
-// });
-// Start the server
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });

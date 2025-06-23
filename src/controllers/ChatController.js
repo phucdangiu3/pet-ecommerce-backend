@@ -1,57 +1,29 @@
-// controllers/chatcontroller.js
 const ChatService = require("../services/ChatService");
 
-// Controller for sending a new message
+// Gửi tin nhắn
 const sendMessage = async (req, res) => {
-  const { sender, receiver, text, imageUrl, videoUrl, msgByUserId } = req.body;
-
-  try {
-    const newMessage = await ChatService.createMessage({
-      sender,
-      receiver,
-      text,
-      imageUrl,
-      videoUrl,
-      msgByUserId,
-    });
-    res.status(200).json(newMessage);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error sending message", error: error.message });
-  }
+  const { from, to, text } = req.body;
+  const saved = await ChatService.saveMessage({ from, to, text });
+  res.status(200).json({ status: "OK", data: saved });
 };
 
-// Controller for getting the conversation for the user
+// Lấy tin nhắn giữa 2 người (Admin/User đều dùng được)
 const getUserConversations = async (req, res) => {
-  const { userId } = req.params;
+  const { id } = req.params; // id là đối tượng đối thoại với
+  const from = req.userId;
 
-  try {
-    const conversations = await ChatService.getConversation(userId);
-    res.status(200).json(conversations);
-  } catch (error) {
-    res
-      .status(500)
-      .json({ message: "Error fetching conversations", error: error.message });
-  }
+  const messages = await ChatService.getMessagesBetween(from, id);
+  res.status(200).json({ status: "OK", data: messages });
 };
 
-// Controller for marking messages as seen
-const markAsSeen = async (req, res) => {
-  const { userId, msgByUserId } = req.body;
-
-  try {
-    const updatedConversations = await ChatService.markMessagesAsSeen(
-      userId,
-      msgByUserId
-    );
-    res.status(200).json(updatedConversations);
-  } catch (error) {
-    res.status(500).json({
-      message: "Error marking messages as seen",
-      error: error.message,
-    });
-  }
+// ✅ LẤY DANH SÁCH USER ĐÃ TỪNG NHẮN (Admin dùng)
+const getAllChatUsers = async (req, res) => {
+  const users = await ChatService.getAllChatUsers();
+  res.status(200).json({ status: "OK", data: users });
 };
 
-module.exports = { sendMessage, getUserConversations, markAsSeen };
+module.exports = {
+  sendMessage,
+  getUserConversations,
+  getAllChatUsers,
+};

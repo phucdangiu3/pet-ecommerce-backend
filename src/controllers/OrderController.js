@@ -28,9 +28,17 @@ const createOrder = async (req, res) => {
         message: "Thiếu dữ liệu bắt buộc",
       });
     }
+    const userId = req.userId;
+    if (!userId) {
+      return res.status(401).json({
+        status: "ERR",
+        message: "Không tìm thấy thông tin người dùng từ token",
+      });
+    }
 
     // Pass shippingAddress whole object to OrderService
     const result = await OrderService.createOrder({
+      user: userId, // ✅ thêm dòng này
       shippingAddress,
       orderItems,
       paymentMethod,
@@ -86,6 +94,28 @@ const getDetailsOrder = async (req, res) => {
     });
   }
 };
+const updateOrder = async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const data = req.body;
+
+    if (!orderId) {
+      return res.status(400).json({
+        status: "ERR",
+        message: "Thiếu ID đơn hàng",
+      });
+    }
+
+    const result = await OrderService.updateOrder(orderId, data);
+    return res.status(200).json(result);
+  } catch (error) {
+    return res.status(500).json({
+      status: "ERR",
+      message: "Lỗi server khi cập nhật đơn hàng",
+    });
+  }
+};
+
 const CancelOrderDetails = async (req, res) => {
   try {
     const data = req.body.orderItems;
@@ -106,6 +136,7 @@ const CancelOrderDetails = async (req, res) => {
 };
 const getAllOrder = async (req, res) => {
   try {
+    // Admin lấy tất cả các đơn hàng
     const data = await OrderService.getAllOrder();
     return res.status(200).json(data);
   } catch (e) {
@@ -114,10 +145,13 @@ const getAllOrder = async (req, res) => {
     });
   }
 };
+
 module.exports = {
   createOrder,
   getAllOrderDetails,
   getDetailsOrder,
   CancelOrderDetails,
+  updateOrder,
   getAllOrder,
+  getAllOrderDetails,
 };
