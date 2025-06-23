@@ -77,7 +77,7 @@ const sendEmailCreateOrder = async (
 
     const info = await transporter.sendMail({
       from: `"Shiinny Shop" <${process.env.MAIL_ACCOUNT}>`, // Địa chỉ email gửi
-      to: "phanhoangphuc2906@gmail.com", // Danh sách người nhận
+      to: email, // Danh sách người nhận
       subject: "Bạn đã đặt hàng tại shop Shiinny", // Tiêu đề email
       text: "Đơn hàng của bạn đã được ghi nhận", // Nội dung văn bản thuần
       html, // Nội dung HTML
