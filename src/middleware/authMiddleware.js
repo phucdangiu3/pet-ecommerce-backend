@@ -28,8 +28,6 @@ const authUserMiddleware = (req, res, next) => {
     }
 
     jwt.verify(token, process.env.ACCESS_TOKEN, (err, user) => {
-      const userId = req.params.id;
-
       if (err) {
         console.log("❌ Token verify error:", err.message);
         return res
