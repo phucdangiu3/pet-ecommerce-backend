@@ -2,6 +2,7 @@ const OrderService = require("../services/OrderService");
 const createOrder = async (req, res) => {
   try {
     const {
+      email,
       shippingAddress,
       orderItems,
       paymentMethod,
