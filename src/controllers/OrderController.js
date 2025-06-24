@@ -1,8 +1,10 @@
 const OrderService = require("../services/OrderService");
+const { sendEmailCreateOrder } = require("../services/EmailService");
 const createOrder = async (req, res) => {
   try {
     const {
       email,
+      note,
       shippingAddress,
       orderItems,
       paymentMethod,
@@ -40,6 +42,8 @@ const createOrder = async (req, res) => {
     // Pass shippingAddress whole object to OrderService
     const result = await OrderService.createOrder({
       user: userId, // ✅ thêm dòng này
+      email, // ✅ thêm dòng này
+      note,
       shippingAddress,
       orderItems,
       paymentMethod,
@@ -48,6 +52,16 @@ const createOrder = async (req, res) => {
       totalPrice,
       discountCode,
     });
+
+    if (result && result.orderId) {
+      await sendEmailCreateOrder(
+        email,
+        orderItems,
+        result.orderId,
+        totalPrice,
+        note
+      );
+    }
 
     return res.status(201).json(result);
   } catch (error) {
