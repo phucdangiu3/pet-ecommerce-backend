@@ -34,8 +34,8 @@ const authUserMiddleware = (req, res, next) => {
           .status(403)
           .json({ status: "ERROR", message: "Invalid token" });
       }
-
-      const isAuthorized = user?.isAdmin || user?.id === userId;
+      const paramId = req.params.id;
+      const isAuthorized = user?.isAdmin || !paramId || user?.id === paramId;
       if (!isAuthorized) {
         console.log("⚠️ User unauthorized:", user);
         return res.status(403).json({ status: "ERROR", message: "Forbidden" });
