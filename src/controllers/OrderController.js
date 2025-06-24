@@ -53,16 +53,6 @@ const createOrder = async (req, res) => {
       discountCode,
     });
 
-    if (result && result.orderId) {
-      await sendEmailCreateOrder(
-        email,
-        orderItems,
-        result.orderId,
-        totalPrice,
-        note
-      );
-    }
-
     return res.status(201).json(result);
   } catch (error) {
     console.error(error);
