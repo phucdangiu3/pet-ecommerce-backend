@@ -12,6 +12,7 @@ const sendEmailCreateOrder = async (
 ) => {
   console.log("EMAIL:", process.env.MAIL_ACCOUNT);
   console.log("PASSWORD:", process.env.MAIL_PASSWORD);
+  console.log("📧 Gửi đến email:", email);
 
   try {
     const transporter = nodemailer.createTransport({

@@ -25,7 +25,7 @@ const createOrder = async (orderData) => {
       orderData.totalPrice,
       orderData.note || ""
     );
-
+    console.log("💌 Email cần gửi:", orderData.email);
     for (const item of orderData.orderItems) {
       const updatedProduct = await Product.findOneAndUpdate(
         {
