@@ -7,20 +7,16 @@ const {
   authUserMiddleware,
 } = require("../middleware/authMiddleware");
 // Tạo mã giảm giá
-router.post("/create", authAdminMiddleware, DiscountController.createDiscount);
+router.post("/create", DiscountController.createDiscount);
 
 // Kiểm tra mã giảm giá
 router.post("/check", DiscountController.checkDiscount);
 router.get("/get-all", DiscountController.getAllDiscount);
 router.put(
   "/update/:id",
-  authAdminMiddleware,
-  DiscountController.updateDiscount
+
+  DiscountController.updateDiscount,
 ); // ✅ update
-router.delete(
-  "/delete/:id",
-  authAdminMiddleware,
-  DiscountController.deleteDiscount
-); // ✅ delete
+router.delete("/delete/:id", DiscountController.deleteDiscount); // ✅ delete
 
 module.exports = router;

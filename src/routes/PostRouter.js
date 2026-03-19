@@ -6,10 +6,10 @@ const {
   authUserMiddleware,
 } = require("../middleware/authMiddleware");
 
-router.post("/create", authAdminMiddleware, PostController.createPost);
+router.post("/create", PostController.createPost);
 router.get("/get-all", PostController.getAllPosts);
 router.get("/get-details/:slug", PostController.getPostDetail);
-router.put("/update/:id", authAdminMiddleware, PostController.updatePost);
-router.delete("/delete/:id", authAdminMiddleware, PostController.deletePost);
+router.put("/update/:id", PostController.updatePost);
+router.delete("/delete/:id", PostController.deletePost);
 
 module.exports = router;

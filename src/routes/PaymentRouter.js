@@ -6,15 +6,15 @@ const {
   authUserMiddleware,
 } = require("../middleware/authMiddleware");
 
-router.post("/create-qr", authUserMiddleware, PaymentController.createPayment);
+router.post("/create-qr", PaymentController.createPayment);
 router.get(
   "/check-payment-vnpay",
-  authUserMiddleware,
-  PaymentController.checkPayment
+
+  PaymentController.checkPayment,
 );
-router.post(
-  "/mark-paid",
-  authUserMiddleware,
-  PaymentController.markPaymentPaid
-);
+// router.post(
+//   "/mark-paid",
+//   authUserMiddleware,
+//   PaymentController.markPaymentPaid
+// );
 module.exports = router;

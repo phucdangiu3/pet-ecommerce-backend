@@ -15,6 +15,7 @@ const createProduct = async (req, res) => {
       price,
       rating,
       description,
+      discount,
     } = req.body;
 
     if (!name || !image || !type || !countInStock || !price || !rating) {
@@ -115,7 +116,7 @@ const getAllProduct = async (req, res) => {
       Number(page) || 0,
       sort,
       filter,
-      search
+      search,
     );
     return res.status(200).json(response);
   } catch (e) {

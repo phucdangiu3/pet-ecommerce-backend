@@ -178,6 +178,59 @@ const logoutUser = async (req, res) => {
     });
   }
 };
+const requestSignUpOtp = async (req, res) => {
+  try {
+    const { name, email, password, confirmPassword, phone } = req.body;
+    const reg = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
+    const isCheckEmail = reg.test(email);
+
+    if (!name || !email || !password || !confirmPassword || !phone) {
+      return res.status(400).json({
+        status: "ERR",
+        message: "The input is required",
+      });
+    } else if (!isCheckEmail) {
+      return res.status(400).json({
+        status: "ERR",
+        message: "The input is email",
+      });
+    } else if (password !== confirmPassword) {
+      return res.status(400).json({
+        status: "ERR",
+        message: "The password is not equal confirmPassword",
+      });
+    }
+
+    const response = await UserService.requestSignUpOtp(req.body);
+    return res.status(200).json(response);
+  } catch (e) {
+    return res.status(500).json({
+      status: "ERR",
+      message: e.message,
+    });
+  }
+};
+
+const verifySignUpOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        status: "ERR",
+        message: "Email và OTP là bắt buộc",
+      });
+    }
+
+    const response = await UserService.verifySignUpOtp({ email, otp });
+    return res.status(200).json(response);
+  } catch (e) {
+    return res.status(500).json({
+      status: "ERR",
+      message: e.message,
+    });
+  }
+};
 module.exports = {
   createUser,
   loginUser,
@@ -188,4 +241,6 @@ module.exports = {
   refreshToken,
   logoutUser,
   deleteMany,
+  verifySignUpOtp,
+  requestSignUpOtp,
 };

@@ -36,7 +36,7 @@ const checkPayment = async (req, res) => {
 
     if (result.success) {
       const orderData = await PaymentService.getOrderDataFromSomewhere(
-        result.orderId
+        result.orderId,
       );
       console.log("Order data from DB:", orderData);
 
@@ -65,35 +65,35 @@ const checkPayment = async (req, res) => {
   }
 };
 // src/controllers/OrderController.js (hoặc PaymentController.js tùy bạn đặt)
-const markPaymentPaid = async (req, res) => {
-  try {
-    const { orderId } = req.body;
-    if (!orderId) {
-      return res.status(400).json({ status: "ERR", message: "Thiếu orderId" });
-    }
+// const markPaymentPaid = async (req, res) => {
+//   try {
+//     const { orderId } = req.body;
+//     if (!orderId) {
+//       return res.status(400).json({ status: "ERR", message: "Thiếu orderId" });
+//     }
 
-    const order = await Order.findById(orderId);
-    if (!order) {
-      return res
-        .status(404)
-        .json({ status: "ERR", message: "Không tìm thấy đơn hàng" });
-    }
+//     const order = await Order.findById(orderId);
+//     if (!order) {
+//       return res
+//         .status(404)
+//         .json({ status: "ERR", message: "Không tìm thấy đơn hàng" });
+//     }
 
-    order.isPaid = true;
-    order.paidAt = new Date();
-    await order.save();
+//     order.isPaid = true;
+//     order.paidAt = new Date();
+//     await order.save();
 
-    res
-      .status(200)
-      .json({ status: "OK", message: "Cập nhật thanh toán thành công", order });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ status: "ERR", message: "Lỗi server" });
-  }
-};
+//     res
+//       .status(200)
+//       .json({ status: "OK", message: "Cập nhật thanh toán thành công", order });
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ status: "ERR", message: "Lỗi server" });
+//   }
+// };
 
 module.exports = {
   createPayment,
   checkPayment,
-  markPaymentPaid,
+
 };

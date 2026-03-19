@@ -7,15 +7,11 @@ const {
 } = require("../middleware/authMiddleware");
 
 // Chỉ người dùng có quyền chat
-router.post("/message", authUserMiddleware, chatController.sendMessage);
+router.post("/message", chatController.sendMessage);
 
 // Lấy tin nhắn – cho Admin hoặc chính chủ
-router.get(
-  "/conversations/:id",
-  authUserMiddleware,
-  chatController.getUserConversations
-);
+router.get("/conversations/:id", chatController.getUserConversations);
 // ChatRouter.js
-router.get("/users", authAdminMiddleware, chatController.getAllChatUsers);
+router.get("/users", chatController.getAllChatUsers);
 
 module.exports = router;

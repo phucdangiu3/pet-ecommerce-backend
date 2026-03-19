@@ -3,32 +3,41 @@ const dotenv = require("dotenv");
 dotenv.config();
 var inlineBase64 = require("nodemailer-plugin-inline-base64");
 
+const createTransporter = () => {
+  if (!process.env.MAIL_ACCOUNT || !process.env.MAIL_PASSWORD) {
+    throw new Error("Thiếu MAIL_ACCOUNT hoặc MAIL_PASSWORD trong file .env");
+  }
+
+  return nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.MAIL_ACCOUNT,
+      pass: process.env.MAIL_PASSWORD,
+    },
+  });
+};
+
 const sendEmailCreateOrder = async (
   email,
   orderItems,
   orderId,
   totalPrice,
-  note
+  note,
 ) => {
   console.log("EMAIL:", process.env.MAIL_ACCOUNT);
   console.log("PASSWORD:", process.env.MAIL_PASSWORD);
   console.log("📧 Gửi đến email:", email);
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true, // true for port 465, false for other ports
-      auth: {
-        user: process.env.MAIL_ACCOUNT,
-        pass: process.env.MAIL_PASSWORD, // App Password của Gmail
-      },
-    });
+    const transporter = createTransporter();
     transporter.use("compile", inlineBase64({ cidPrefix: "somePrefix_" }));
+
     let listItem = "";
     let attachImage = [];
 
-    orderItems.forEach((order, index) => {
+    orderItems.forEach((order) => {
       listItem += `
         <tr>
           <td style="padding: 8px; border: 1px solid #ddd;">${order.name}</td>
@@ -77,20 +86,49 @@ const sendEmailCreateOrder = async (
     `;
 
     const info = await transporter.sendMail({
-      from: `"Shiinny Shop" <${process.env.MAIL_ACCOUNT}>`, // Địa chỉ email gửi
-      to: email, // Danh sách người nhận
-      subject: "Bạn đã đặt hàng tại shop Shiinny", // Tiêu đề email
-      text: "Đơn hàng của bạn đã được ghi nhận", // Nội dung văn bản thuần
-      html, // Nội dung HTML
+      from: `"Shiinny Shop" <${process.env.MAIL_ACCOUNT}>`,
+      to: email,
+      subject: "Bạn đã đặt hàng tại shop Shiinny",
+      text: "Đơn hàng của bạn đã được ghi nhận",
+      html,
       attachments: attachImage,
     });
 
     console.log("Message sent: %s", info.messageId);
   } catch (error) {
     console.error("Error sending email:", error.message);
+    throw error;
+  }
+};
+
+const sendEmailOtpRegister = async (email, otp) => {
+  try {
+    const transporter = createTransporter();
+
+    const html = `
+      <div style="font-family: Arial, sans-serif; color: #333;">
+        <h2>🔐 Xác thực đăng ký tài khoản</h2>
+        <p>Mã OTP của bạn là:</p>
+        <h1 style="letter-spacing: 6px; color: #2a9fd6;">${otp}</h1>
+        <p>Mã có hiệu lực trong 5 phút.</p>
+        <p>Nếu bạn không thực hiện đăng ký, hãy bỏ qua email này.</p>
+      </div>
+    `;
+
+    await transporter.sendMail({
+      from: `"Shiinny Shop" <${process.env.MAIL_ACCOUNT}>`,
+      to: email,
+      subject: "Mã OTP đăng ký tài khoản",
+      text: `Mã OTP của bạn là ${otp}. Mã có hiệu lực trong 5 phút.`,
+      html,
+    });
+  } catch (error) {
+    console.error("Error sending OTP email:", error.message);
+    throw error;
   }
 };
 
 module.exports = {
   sendEmailCreateOrder,
+  sendEmailOtpRegister,
 };

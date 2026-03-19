@@ -6,7 +6,10 @@ const authAdminMiddleware = (req, res, next) => {
   const token = req.headers.token?.split(" ")[1];
 
   jwt.verify(token, process.env.ACCESS_TOKEN, function (err, user) {
+    console.log("Error verifying token:", err.message);
+    console.log("Decoded user:", user);
     if (err || !user?.isAdmin) {
+      console.log("Access Denied. Admin only.");
       return res
         .status(403)
         .json({ status: "ERROR", message: "Forbidden (Admin only)" });

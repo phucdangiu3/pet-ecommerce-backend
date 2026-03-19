@@ -86,7 +86,7 @@ app.use(
     origin: "https://pet-ecommerce-frontend.vercel.app", // Allow frontend from Vercel
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true, // Allow cookies
-  })
+  }),
 );
 
 app.use(express.json({ limit: "50mb" }));

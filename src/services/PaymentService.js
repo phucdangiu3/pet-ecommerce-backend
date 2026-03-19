@@ -9,10 +9,11 @@ const {
   dateFormat,
 } = require("vnpay");
 const crypto = require("crypto");
+const qs = require("qs");
 
 const vnpay = new VNPay({
   tmnCode: "EU34Z09C",
-  secureSecret: "YEFITI6TNUNB00IP6VHL0P2NC4YGEKNI",
+  secureSecret: "IVR2SLANOTAPP62MHASM4RH7N739WH9D",
   vnpayHost: "https://sandbox.vnpayment.vn",
   testMode: true,
   hashAlgorithm: "SHA512",
@@ -31,7 +32,7 @@ async function buildPaymentUrl({
   tomorrow.setDate(tomorrow.getDate() + 1);
 
   return await vnpay.buildPaymentUrl({
-    vnp_Amount: amount,
+    vnp_Amount: Number(amount) * 100,
     vnp_IpAddr: ipAddr,
     vnp_TxnRef: txnRef,
     vnp_OrderInfo: orderInfo,
@@ -42,23 +43,34 @@ async function buildPaymentUrl({
     vnp_ExpireDate: dateFormat(tomorrow),
   });
 }
+function sortObject(obj) {
+  const sorted = {};
+  Object.keys(obj)
+    .sort()
+    .forEach((k) => (sorted[k] = obj[k]));
+  return sorted;
+}
 
-function verifyVnpSignature(params, secret) {
-  const vnp_SecureHash = params.vnp_SecureHash;
+function verifyVnpSignature(rawParams, secret) {
+  // KHÔNG mutate params gốc (vì bạn còn dùng nó ở ngoài)
+  const params = { ...rawParams };
+
+  const secureHash = params.vnp_SecureHash;
   delete params.vnp_SecureHash;
   delete params.vnp_SecureHashType;
 
-  const sortedKeys = Object.keys(params).sort();
-  const signData = sortedKeys.map((key) => `${key}=${params[key]}`).join("&");
+  const sorted = sortObject(params);
+
+  // stringify giống demo VNPAY
+  const signData = qs.stringify(sorted, { encode: false });
 
   const hash = crypto
     .createHmac("sha512", secret)
-    .update(signData, "utf-8")
+    .update(Buffer.from(signData, "utf-8"))
     .digest("hex");
 
-  return hash === vnp_SecureHash;
+  return hash === secureHash;
 }
-
 async function getOrderDataFromSomewhere(orderId) {
   // orderId thực chất là _id MongoDB dưới dạng string
   if (!mongoose.Types.ObjectId.isValid(orderId)) {
@@ -71,27 +83,31 @@ async function getOrderDataFromSomewhere(orderId) {
 async function checkPayment(params) {
   const isValid = verifyVnpSignature(
     params,
-    "YEFITI6TNUNB00IP6VHL0P2NC4YGEKNI"
+    process.env.VNP_HASH_SECRET || "IVR2SLANOTAPP62MHASM4RH7N739WH9D",
   );
 
   if (!isValid) {
     return { success: false, message: "Chữ ký không hợp lệ" };
   }
 
-  if (params.vnp_ResponseCode === "00") {
+  const ok =
+    params.vnp_ResponseCode === "00" && params.vnp_TransactionStatus === "00";
+
+  if (ok) {
     return {
       success: true,
       message: "Thanh toán thành công",
       orderId: params.vnp_TxnRef,
-    };
-  } else {
-    return {
-      success: false,
-      message: `Thanh toán thất bại, mã lỗi: ${params.vnp_ResponseCode}`,
+      vnpTransactionNo: params.vnp_TransactionNo,
     };
   }
-}
 
+  return {
+    success: false,
+    message: `Thanh toán thất bại, mã lỗi: ${params.vnp_ResponseCode}`,
+    status: params.vnp_TransactionStatus,
+  };
+}
 module.exports = {
   buildPaymentUrl,
   checkPayment,
