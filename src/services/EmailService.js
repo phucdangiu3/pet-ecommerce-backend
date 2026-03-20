@@ -1,6 +1,7 @@
 const nodemailer = require("nodemailer");
 const dotenv = require("dotenv");
 dotenv.config();
+const axios = require("axios");
 var inlineBase64 = require("nodemailer-plugin-inline-base64");
 
 const createTransporter = () => {
@@ -103,7 +104,13 @@ const sendEmailCreateOrder = async (
 
 const sendEmailOtpRegister = async (email, otp) => {
   try {
-    const transporter = createTransporter();
+    if (!process.env.BREVO_API_KEY) {
+      throw new Error("Thiếu BREVO_API_KEY trong file .env");
+    }
+
+    if (!process.env.BREVO_SENDER_EMAIL) {
+      throw new Error("Thiếu BREVO_SENDER_EMAIL trong file .env");
+    }
 
     const html = `
       <div style="font-family: Arial, sans-serif; color: #333;">
@@ -115,16 +122,36 @@ const sendEmailOtpRegister = async (email, otp) => {
       </div>
     `;
 
-    await transporter.sendMail({
-      from: `"Shiinny Shop" <${process.env.MAIL_ACCOUNT}>`,
-      to: email,
-      subject: "Mã OTP đăng ký tài khoản",
-      text: `Mã OTP của bạn là ${otp}. Mã có hiệu lực trong 5 phút.`,
-      html,
-    });
+    const response = await axios.post(
+      "https://api.brevo.com/v3/smtp/email",
+      {
+        sender: {
+          name: process.env.BREVO_SENDER_NAME || "Shiinny Shop",
+          email: process.env.BREVO_SENDER_EMAIL,
+        },
+        to: [{ email }],
+        subject: "Mã OTP đăng ký tài khoản",
+        htmlContent: html,
+        textContent: `Mã OTP của bạn là ${otp}. Mã có hiệu lực trong 5 phút.`,
+      },
+      {
+        headers: {
+          accept: "application/json",
+          "api-key": process.env.BREVO_API_KEY,
+          "content-type": "application/json",
+        },
+        timeout: 15000,
+      },
+    );
+
+    console.log("OTP email sent:", response.data);
+    return response.data;
   } catch (error) {
-    console.error("Error sending OTP email:", error.message);
-    throw error;
+    console.error(
+      "Error sending OTP email:",
+      error.response?.data || error.message,
+    );
+    throw new Error(error.response?.data?.message || "Gửi OTP thất bại");
   }
 };
 
