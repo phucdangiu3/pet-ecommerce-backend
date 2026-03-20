@@ -108,7 +108,7 @@ const sendEmailOtpRegister = async (email, otp) => {
       throw new Error("Thiếu BREVO_API_KEY trong file .env");
     }
 
-    if (!process.env.BREVO_SENDER_EMAIL) {
+    if (!process.env.MAIL_ACCOUNT) {
       throw new Error("Thiếu BREVO_SENDER_EMAIL trong file .env");
     }
 
@@ -127,7 +127,7 @@ const sendEmailOtpRegister = async (email, otp) => {
       {
         sender: {
           name: process.env.BREVO_SENDER_NAME || "Shiinny Shop",
-          email: process.env.BREVO_SENDER_EMAIL,
+          email: process.env.MAIL_ACCOUNT,
         },
         to: [{ email }],
         subject: "Mã OTP đăng ký tài khoản",
