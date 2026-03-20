@@ -18,7 +18,8 @@ const port = process.env.PORT || 3001;
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://pet-ecommerce-frontend.vercel.app", // hoặc vercel URL
+    origin:
+      "https://pet-ecommerce-frontend-git-main-shinnys-projects-507669d2.vercel.app", // hoặc vercel URL
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
@@ -83,7 +84,8 @@ io.on("connection", (socket) => {
 
 app.use(
   cors({
-    origin: "https://pet-ecommerce-frontend.vercel.app", // Allow frontend from Vercel
+    origin:
+      "https://pet-ecommerce-frontend-git-main-shinnys-projects-507669d2.vercel.app", // Allow frontend from Vercel
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true, // Allow cookies
   }),
